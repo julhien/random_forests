@@ -5,6 +5,7 @@ Created on Tue Jan 03 17:44:13 2017
 @author: Mathilde
 """
 from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import csv
 import numpy as np
 import pandas
@@ -55,15 +56,25 @@ def out_of_bag_error(X_t,Y_t,forest,forest_indexes):
 F = [1,int(np.log(len(df.T)-1)/np.log(2)-1)]
 test_set_error = [[],[]]
 error_selection_tab = []
-for iter in range(100):
+generalisation_error_selection = []
+generalisation_error_single = []
+adaboost_error = 0
+for iter in range(10):
     out_of_bag = []
     # Randomly sample 90% of the dataframe
     df_train = df.sample(frac=0.9)
     df_test = df.loc[~df.index.isin(df_train.index)]
-
+    
+    Y_t = df_train[:][len(df.T)-1]
+    X_t = df_train.drop(df_train.columns[len(df.T)-1], axis=1)    
+    
     Y_test = df_test[:][len(df.T)-1]
     X_test = df_test.drop(df_test.columns[len(df.T)-1], axis=1)
     
+    #Adaboost with 50 trees
+    adaboost = AdaBoostClassifier()
+    adaboost = adaboost.fit(X_t, Y_t)
+    adaboost_error = adaboost_error + adaboost.score(X_test,Y_test)
     
     for f in range(len(F)):
         forest = []
@@ -83,22 +94,31 @@ for iter in range(100):
             # ...
             # ...              
             forest_indexes.append(df_train_bagged.index)
+            
         # ... now we are supposed to have a beautiful forest
             
         #we compute the out_of_bag error in the forest
-        Y_t = df_train[:][len(df.T)-1]
-        X_t = df_train.drop(df_train.columns[len(df.T)-1], axis=1)
         out_of_bag.append(out_of_bag_error(X_t,Y_t,forest,forest_indexes)) 
         
         #we compute the test set error on the forest
         test_set_error[f].append(function_test_set_error(X_test,Y_test,forest))
+    print out_of_bag
     #select the test error from the run which has the lower out_of_bag estimate
     error_selection_tab.append(test_set_error[np.argmin(out_of_bag)][-1])
-            
+    #select the lower of the out_of_bag estimates
+    generalisation_error_selection.append(np.min(out_of_bag))
+    #out_of_bag estimate for single setting
+    generalisation_error_single.append(out_of_bag[0])
     
-        
+adaboost_error = adaboost_error/100.
 error_selection = np.mean(error_selection_tab)
 error_single = np.mean(test_set_error[0])
 
 # We need to compute the generalisation error for the best setting between single and selection
+one_tree = 0
+if(error_selection<=error_single):
+    #average the out_of_bag error, for each iteration we take the lower between selection and single
+    one_tree = np.mean(generalisation_error_selection)
+else:
+    one_tree = np.mean(generalisation_error_single)
     
