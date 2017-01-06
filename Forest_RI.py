@@ -12,7 +12,7 @@ import pandas
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-data_file  =  "datasets/ionosphere.txt"#"sonar.txt"
+data_file  =  "datasets/sonar.txt"#"datasets/ionosphere.txt"#
 
 f = open( data_file, "r" )
 
@@ -52,15 +52,31 @@ def out_of_bag_error(X_t,Y_t,forest,forest_indexes):
             error = error + 1.
 
     return error/len(X_t)
-    
+
+def single_tree_error(X_t,Y_t,forest,forest_indexes):
+    errors = [0]*len(forest)
+    totals = [0]*len(forest)
+    for x in range(X_t.shape[0]):
+        #We use the majority vote
+        for arbre in range(len(forest)):
+            #test if we consider this tree - is the data x used to construct the tree arbre
+            if not X_t.index[x] in forest_indexes[arbre]:
+                totals[arbre] = totals[arbre] + 1
+                if (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]!=Y_t.iloc[[x]].as_matrix()):
+                    errors[arbre] = errors[arbre] + 1.
+    errors = [errors[i]/totals[i] for i in range(len(forest))]
+    return np.mean(errors)
+
+
 #Number of feature selected at each node
 F = [1,int(np.log(len(df.T)-1)/np.log(2)-1)]
 test_set_error = [[],[]]
 error_selection_tab = []
 generalisation_error_selection = []
 generalisation_error_single = []
+generalisation_error_one_tree = []
 adaboost_error = 0
-for iter in range(10):
+for iter in range(100):
     out_of_bag = []
     # Randomly sample 90% of the dataframe
     df_train = df.sample(frac=0.9)
@@ -77,7 +93,9 @@ for iter in range(10):
     adaboost = AdaBoostClassifier()
     adaboost = adaboost.fit(X_t, Y_t)
     adaboost_error = adaboost_error + adaboost.score(X_test,Y_test)
+
     f_forests=[]
+    f_forests_indices = []
     for f in range(len(F)):
         forest = []
         #we keep track of the index of the data used for each tree
@@ -96,6 +114,7 @@ for iter in range(10):
             # ...              
             forest_indexes.append(df_train_bagged.index)
         f_forests.append(forest)
+        f_forests_indices.append(forest_indexes)
         # ... now we are supposed to have a beautiful forest
             
         #we compute the out_of_bag error in the forest
@@ -110,19 +129,29 @@ for iter in range(10):
     generalisation_error_selection.append(np.min(out_of_bag))
     #out_of_bag estimate for single setting
     generalisation_error_single.append(out_of_bag[0])
-    
+    #evaluating the best estimator with regards to test set
+    index_best  = np.argmin([test_set_error[i][-1] for i in range(len(F))])
+    #calculate individual trees generalization errors wrt this best
+    generalisation_error_one_tree.append(
+        single_tree_error(X_t, Y_t, f_forests[index_best], f_forests_indices[index_best]))
+
 adaboost_error = adaboost_error/100.
 error_selection = np.mean(error_selection_tab)
 error_single = np.mean(test_set_error[0])
+error_one_tree = np.mean(generalisation_error_one_tree)
+print(error_selection_tab)
+print(test_set_error)
 print(adaboost_error)
 print(error_selection)
 print(error_single)
+print(error_one_tree)
+
 # We need to compute the generalisation error for the best setting between single and selection
 one_tree = 0
-
-if(error_selection<=error_single):
-    #average the out_of_bag error, for each iteration we take the lower between selection and single
-    one_tree = np.mean(generalisation_error_selection)
-else:
-    one_tree = np.mean(generalisation_error_single)
-    
+#
+# if(error_selection<=error_single):
+#     #average the out_of_bag error, for each iteration we take the lower between selection and single
+#     one_tree = np.mean(generalisation_error_selection)
+# else:
+#     one_tree = np.mean(generalisation_error_single)
+#
