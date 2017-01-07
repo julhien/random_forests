@@ -86,7 +86,7 @@ generalisation_error_selection = []
 generalisation_error_single = []
 generalisation_error_one_tree = []
 adaboost_error = 0
-for iter in range(100):
+for iter in range(10):
     out_of_bag = []
     # Randomly sample 90% of the dataframe
     df_train = df.sample(frac=0.9)
@@ -110,6 +110,7 @@ for iter in range(100):
         forest = []
         #we keep track of the index of the data used for each tree
         forest_indexes = []
+        oob_error=0
         # For each tree of the forest
         for arbre in range(100):
             #bagging
@@ -118,18 +119,29 @@ for iter in range(100):
             ##Construct a forest thanks to sklearn
 #            Y_train = df_train_bagged.drop(df_train_bagged.columns[:len(df.T)-1], axis=1)
 #            X_train = df_train_bagged.drop(df_train_bagged.columns[len(df.T)-1], axis=1)
-            # We use the tree from sklearn but we ought to code it from scratch... growing and combining the trees
 #            clf = tree.DecisionTreeClassifier(max_features = F[f])
 #            forest.append(clf.fit(X_train, Y_train))
             
             # construct a forest with decision tree
             forest.append(decision_tree.build_tree(convert_to_float(df_train_bagged.values.tolist()),100,10,F[f]))
+            
+            #out_of_bag estimate
+            total = 0.
+            vote = 0.
+            for x in range(len(X_t)):
+                if not X_t.index[x] in forest_indexes[-1]:
+                    total = total + 1.
+                    vote = vote + int(decision_tree.predict(forest[-1],X_t.iloc[x])!=Y_t.iloc[x])
+            oob_error = oob_error + vote/total
+                
+            
         f_forests.append(forest)
         f_forests_indices.append(forest_indexes)
         # ... now we are supposed to have a beautiful forest
             
         #we compute the out_of_bag error in the forest
-        out_of_bag.append(out_of_bag_error(X_t,Y_t,forest,forest_indexes)) 
+        #out_of_bag.append(out_of_bag_error(X_t,Y_t,forest,forest_indexes)) 
+        out_of_bag.append(oob_error/100.) 
         
         #we compute the test set error on the forest
         test_set_error[f].append(function_test_set_error(X_test,Y_test,forest))
