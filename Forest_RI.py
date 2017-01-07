@@ -27,6 +27,12 @@ with open(data_file, 'rb') as csvfile:
 
 df = pandas.DataFrame(X)
 
+def convert_to_float(data):
+    for r in range(len(data)):
+        for i in range(len(data[r])-1):
+            data[r][i]=float(data[r][i])
+    return data
+
 def function_test_set_error(X_test,Y_test,forest):
     error = 0.
     for x in range(X_test.shape[0]):
@@ -117,7 +123,7 @@ for iter in range(100):
 #            forest.append(clf.fit(X_train, Y_train))
             
             # construct a forest with decision tree
-            forest.append(decision_tree.build_tree(df_train_bagged.values.tolist(),100,10,F[f]))
+            forest.append(decision_tree.build_tree(convert_to_float(df_train_bagged.values.tolist()),100,10,F[f]))
         f_forests.append(forest)
         f_forests_indices.append(forest_indexes)
         # ... now we are supposed to have a beautiful forest
