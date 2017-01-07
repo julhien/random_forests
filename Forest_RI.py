@@ -4,6 +4,7 @@ Created on Tue Jan 03 17:44:13 2017
 
 @author: Mathilde
 """
+import decision_tree
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import csv
@@ -32,8 +33,9 @@ def function_test_set_error(X_test,Y_test,forest):
         #We use the majority vote
         vote = 0
         for arbre in range(len(forest)):
-            vote = vote + (forest[arbre].predict(X_test.iloc[[x]].as_matrix())[0]==Y_test.iloc[[x]].as_matrix())
-        if (vote[0][0] <int(len(forest)/2)):
+            #vote = vote + (forest[arbre].predict(X_test.iloc[[x]].as_matrix())[0]==Y_test.iloc[[x]].as_matrix())
+            vote = vote + (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
+        if (vote <int(len(forest)/2)):
             error = error + 1.
     return error/len(X_test)
     
@@ -47,8 +49,9 @@ def out_of_bag_error(X_t,Y_t,forest,forest_indexes):
             #test if we consider this tree - is the data x used to construct the tree arbre
             if not X_t.index[x] in forest_indexes[arbre]:
                 total = total + 1
-                vote = vote + (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==Y_t.iloc[[x]].as_matrix())
-        if (vote[0][0] <int(total/2)):
+                #vote = vote + (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==Y_t.iloc[[x]].as_matrix())
+                vote = vote + (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
+        if (vote <int(total/2)):
             error = error + 1.
 
     return error/len(X_t)
@@ -62,7 +65,8 @@ def single_tree_error(X_t,Y_t,forest,forest_indexes):
             #test if we consider this tree - is the data x used to construct the tree arbre
             if not X_t.index[x] in forest_indexes[arbre]:
                 totals[arbre] = totals[arbre] + 1
-                if (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]!=Y_t.iloc[[x]].as_matrix()):
+                #if (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]!=Y_t.iloc[[x]].as_matrix()):
+                if (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())!=Y_t.iloc[x].as_matrix()):
                     errors[arbre] = errors[arbre] + 1.
     errors = [errors[i]/totals[i] for i in range(len(forest))]
     return np.mean(errors)
@@ -104,15 +108,16 @@ for iter in range(100):
         for arbre in range(100):
             #bagging
             df_train_bagged = df_train.sample(frac=0.66,replace=True)
-            Y_train = df_train_bagged.drop(df_train_bagged.columns[:len(df.T)-1], axis=1)
-            X_train = df_train_bagged.drop(df_train_bagged.columns[len(df.T)-1], axis=1)
-            # We use the tree from sklearn but we ought to code it from scratch... growing and combining the trees
-            clf = tree.DecisionTreeClassifier(max_features = F[f])
-            forest.append(clf.fit(X_train, Y_train))
-            # ...
-            # ...
-            # ...              
             forest_indexes.append(df_train_bagged.index)
+            ##Construct a forest thanks to sklearn
+#            Y_train = df_train_bagged.drop(df_train_bagged.columns[:len(df.T)-1], axis=1)
+#            X_train = df_train_bagged.drop(df_train_bagged.columns[len(df.T)-1], axis=1)
+            # We use the tree from sklearn but we ought to code it from scratch... growing and combining the trees
+#            clf = tree.DecisionTreeClassifier(max_features = F[f])
+#            forest.append(clf.fit(X_train, Y_train))
+            
+            # construct a forest with decision tree
+            forest.append(decision_tree.build_tree(df_train_bagged.values.tolist(),100,10,F[f]))
         f_forests.append(forest)
         f_forests_indices.append(forest_indexes)
         # ... now we are supposed to have a beautiful forest
@@ -122,7 +127,6 @@ for iter in range(100):
         
         #we compute the test set error on the forest
         test_set_error[f].append(function_test_set_error(X_test,Y_test,forest))
-    print out_of_bag
     #select the test error from the run which has the lower out_of_bag estimate
     error_selection_tab.append(test_set_error[np.argmin(out_of_bag)][-1])
     #select the lower of the out_of_bag estimates
