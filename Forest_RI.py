@@ -13,19 +13,7 @@ import pandas
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-data_file  =  "datasets/sonar.txt"#"datasets/ionosphere.txt"#
 
-f = open( data_file, "r" )
-
-X = []
-
-with open(data_file, 'rb') as csvfile:
-    reader = csv.reader(csvfile, delimiter=',')
-    for row in reader:
-        X.append(row)
-
-
-df = pandas.DataFrame(X)
 
 def convert_to_float(data):
     for r in range(len(data)):
@@ -76,7 +64,21 @@ def single_tree_error(X_t,Y_t,forest,forest_indexes):
                     errors[arbre] = errors[arbre] + 1.
     errors = [errors[i]/totals[i] for i in range(len(forest))]
     return np.mean(errors)
+    
+data_file  =  "datasets/sonar.txt"#"datasets/ionosphere.txt"#
 
+f = open( data_file, "r" )
+
+X = []
+
+with open(data_file, 'rb') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',')
+    for row in reader:
+        X.append(row)
+        
+X = convert_to_float(X)
+
+df = pandas.DataFrame(X)
 
 #Number of feature selected at each node
 F = [1,int(np.log(len(df.T)-1)/np.log(2)-1)]
@@ -86,7 +88,7 @@ generalisation_error_selection = []
 generalisation_error_single = []
 generalisation_error_one_tree = []
 adaboost_error = 0
-for iter in range(10):
+for iter in range(100):
     out_of_bag = []
     # Randomly sample 90% of the dataframe
     df_train = df.sample(frac=0.9)
@@ -123,7 +125,7 @@ for iter in range(10):
 #            forest.append(clf.fit(X_train, Y_train))
             
             # construct a forest with decision tree
-            forest.append(decision_tree.build_tree(convert_to_float(df_train_bagged.values.tolist()),100,10,F[f]))
+            forest.append(decision_tree.build_tree(df_train_bagged.values.tolist(),100,5,F[f]))
             
             #out_of_bag estimate
             total = 0.
