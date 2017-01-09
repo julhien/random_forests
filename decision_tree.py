@@ -24,28 +24,39 @@ def test_split(index, value, dataset):
 
 # Calculate the Gini index for a split dataset
 def gini_index(groups, class_values):
-	gini = 0.0
-	for class_value in class_values:
-		for group in groups:
-			size = len(group)
-			if size == 0:
-				continue
-			proportion = [row[-1] for row in group].count(class_value) / float(size)
-			gini += (proportion * (1.0 - proportion))
-	return gini
+    gini = 0.0
+    for class_value in class_values:
+        for group in groups:
+            size = len(group)
+            if size == 0 :
+                #gini += 100
+                continue
+            proportion = [row[-1] for row in group].count(class_value) / float(size)
+            gini += (proportion * (1.0 - proportion))
+    return gini
+
 
 # Select the best split point for a dataset
 def get_split(dataset, F):
-    indexes = random.sample(range(0,len(dataset[0])-1),F)
-    class_values = list(set(row[-1] for row in dataset))
-    b_index, b_value, b_score, b_groups = 999, 999, 999, None 
-    for index in indexes:
-		for row in dataset:
-			groups = test_split(index, row[index], dataset)
-			gini = gini_index(groups, class_values)
-			if gini < b_score:
-				b_index, b_value, b_score, b_groups = index, row[index], gini, groups
-    return {'index':b_index, 'value':b_value, 'groups':b_groups}
+	empty = True
+	ind = [0]*(len(dataset[0])-1)
+	while empty and sum([i==0 for i in ind])>0:
+		indexes = random.sample(range(0,len(dataset[0])-1),F)
+		class_values = list(set(row[-1] for row in dataset))
+		b_index, b_value, b_score, b_groups = 999, 999, 999, None
+		for index in indexes:
+			ind[index] += 1
+			for row in dataset:
+				groups = test_split(index, row[index], dataset)
+				gini = gini_index(groups, class_values)
+				if gini < b_score:
+					b_index, b_value, b_score, b_groups = index, row[index], gini, groups
+		# if b_score>0.0:
+		# 	empty = ((len(b_groups[0])==0) or (len(b_groups[1])==0))
+		# else:
+		empty = False
+	#print {'index': b_index, 'value': b_value, 'groups': len(b_groups[0]), 'score': b_score}
+	return {'index':b_index, 'value':b_value, 'groups':b_groups, 'score':b_score}
 
 # Create a terminal node value
 def to_terminal(group):
@@ -56,23 +67,49 @@ def to_terminal(group):
 def split(node, max_depth, min_size, depth,F):
 	left, right = node['groups']
 	del(node['groups'])
+	# # check for a no split
+	# if not left or not right:
+	# 	node['left'] = node['right'] = to_terminal(left + right)
+	# 	return
+	# # check for max depth
+	# if depth >= max_depth:
+	# 	node['left'], node['right'] = to_terminal(left), to_terminal(right)
+	# 	return
+	# # process left child
+	# if len(left) <= min_size:
+	# 	node['left'] = to_terminal(left)
+	# else:
+	# 	node['left'] = get_split(left,F)
+	# 	split(node['left'], max_depth, min_size, depth+1,F)
+	# # process right child
+	# if len(right) <= min_size:
+	# 	node['right'] = to_terminal(right)
+	# else:
+	# 	node['right'] = get_split(right,F)
+	# 	split(node['right'], max_depth, min_size, depth+1,F)
 	# check for a no split
-	if not left or not right:
-		node['left'] = node['right'] = to_terminal(left + right)
-		return
-	# check for max depth
-	if depth >= max_depth:
-		node['left'], node['right'] = to_terminal(left), to_terminal(right)
-		return
-	# process left child
-	if len(left) <= min_size:
-		node['left'] = to_terminal(left)
+	# if not left or not right:
+	# 	node['left'] = node['right'] = to_terminal(left + right)
+	#  	return
+	# #check for max depth
+	# if depth >= max_depth:
+	# 	node['left'], node['right'] = to_terminal(left), to_terminal(right)
+	# 	return
+	# #process left child
+	if len(left) <= min_size or node['score']<1*10**(-1) or depth >= max_depth:
+		if len(left)==0:
+			node['left'] = to_terminal([right[0]])
+		else:
+			node['left'] = to_terminal(left)
 	else:
 		node['left'] = get_split(left,F)
 		split(node['left'], max_depth, min_size, depth+1,F)
 	# process right child
-	if len(right) <= min_size:
-		node['right'] = to_terminal(right)
+	if len(right) <= min_size or node['score']<1*10**(-1) or depth >= max_depth:
+		if len(right)==0:
+			node['right'] = to_terminal([left[0]])
+		else:
+			node['right'] = to_terminal(right)
 	else:
 		node['right'] = get_split(right,F)
 		split(node['right'], max_depth, min_size, depth+1,F)

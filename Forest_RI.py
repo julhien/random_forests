@@ -4,7 +4,7 @@ Created on Tue Jan 03 17:44:13 2017
 
 @author: Mathilde
 """
-import decision_tree
+import decision_tree_bis
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import csv
@@ -28,7 +28,7 @@ def function_test_set_error(X_test,Y_test,forest):
         vote = 0
         for arbre in range(len(forest)):
             #vote = vote + (forest[arbre].predict(X_test.iloc[[x]].as_matrix())[0]==Y_test.iloc[[x]].as_matrix())
-            vote = vote + (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
+            vote = vote + (decision_tree_bis.predict(forest[arbre],X_test.iloc[x].as_matrix())==Y_test.iloc[x].as_matrix())
         if (vote <int(len(forest)/2)):
             error = error + 1.
     return error/len(X_test)
@@ -44,7 +44,7 @@ def out_of_bag_error(X_t,Y_t,forest,forest_indexes):
             if not X_t.index[x] in forest_indexes[arbre]:
                 total = total + 1
                 #vote = vote + (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==Y_t.iloc[[x]].as_matrix())
-                vote = vote + (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
+                vote = vote + (decision_tree_bis.predict(forest[arbre],X_test.iloc[x].as_matrix())==Y_test.iloc[x].as_matrix())
         if (vote <int(total/2)):
             error = error + 1.
 
@@ -60,7 +60,7 @@ def single_tree_error(X_t,Y_t,forest,forest_indexes):
             if not X_t.index[x] in forest_indexes[arbre]:
                 totals[arbre] = totals[arbre] + 1
                 #if (forest[arbre].predict(X_t.iloc[[x]].as_matrix())[0]!=Y_t.iloc[[x]].as_matrix()):
-                if (decision_tree.predict(forest[arbre],X_t.iloc[x].as_matrix())!=Y_t.iloc[x].as_matrix()):
+                if (decision_tree_bis.predict(forest[arbre],X_t.iloc[x].as_matrix())!=Y_t.iloc[x].as_matrix()):
                     errors[arbre] = errors[arbre] + 1.
     errors = [errors[i]/totals[i] for i in range(len(forest))]
     return np.mean(errors)
@@ -88,7 +88,7 @@ generalisation_error_selection = []
 generalisation_error_single = []
 generalisation_error_one_tree = []
 adaboost_error = 0
-for iter in range(100):
+for iter in range(10):
     out_of_bag = []
     # Randomly sample 90% of the dataframe
     df_train = df.sample(frac=0.9)
@@ -125,7 +125,7 @@ for iter in range(100):
 #            forest.append(clf.fit(X_train, Y_train))
             
             # construct a forest with decision tree
-            forest.append(decision_tree.build_tree(df_train_bagged.values.tolist(),100,5,F[f]))
+            forest.append(decision_tree_bis.build_tree(df_train_bagged.values.tolist(),150,5,F[f]))
             
             #out_of_bag estimate
             total = 0.
@@ -133,7 +133,7 @@ for iter in range(100):
             for x in range(len(X_t)):
                 if not X_t.index[x] in forest_indexes[-1]:
                     total = total + 1.
-                    vote = vote + int(decision_tree.predict(forest[-1],X_t.iloc[x])!=Y_t.iloc[x])
+                    vote = vote + int(decision_tree_bis.predict(forest[-1],X_t.iloc[x])!=Y_t.iloc[x])
             oob_error = oob_error + vote/total
                 
             
@@ -163,8 +163,8 @@ adaboost_error = adaboost_error/100.
 error_selection = np.mean(error_selection_tab)
 error_single = np.mean(test_set_error[0])
 error_one_tree = np.mean(generalisation_error_one_tree)
-print(error_selection_tab)
-print(test_set_error)
+#print(error_selection_tab)
+#☼print(test_set_error)
 print(adaboost_error)
 print(error_selection)
 print(error_single)
