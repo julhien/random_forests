@@ -29,23 +29,33 @@ def gini_index(groups, class_values):
 		for group in groups:
 			size = len(group)
 			if size == 0:
-				continue
+			 	continue
 			proportion = [row[-1] for row in group].count(class_value) / float(size)
 			gini += (proportion * (1.0 - proportion))
+
 	return gini
 
 # Select the best split point for a dataset
 def get_split(dataset, F):
-    indexes = random.sample(range(0,len(dataset[0])-1),F)
-    class_values = list(set(row[-1] for row in dataset))
-    b_index, b_value, b_score, b_groups = 999, 999, 999, None 
-    for index in indexes:
-		for row in dataset:
-			groups = test_split(index, row[index], dataset)
-			gini = gini_index(groups, class_values)
-			if gini < b_score:
-				b_index, b_value, b_score, b_groups = index, row[index], gini, groups
-    return {'index':b_index, 'value':b_value, 'groups':b_groups}
+	b_index, b_value, b_score, b_groups = 999, 999, 999, None
+	i=0
+	while b_score == 999 and i <len(dataset[0])-1:
+		print(i)
+		i+=1
+		indexes = random.sample(range(0,len(dataset[0])-1),F)
+		class_values = list(set(row[-1] for row in dataset))
+		for index in indexes:
+			for row in dataset:
+				groups = test_split(index, row[index], dataset)
+				if i <len(dataset[0])-1 and ( len(groups[0])==0 or len(groups[1])==0) :
+					continue
+				gini = gini_index(groups, class_values)
+				if gini < b_score:
+					b_index, b_value, b_score, b_groups = index, row[index], gini, groups
+	print(b_index)
+	print(b_score)
+	print(len(b_groups[0]))
+	return {'index':b_index, 'value':b_value, 'groups':b_groups}
 
 # Create a terminal node value
 def to_terminal(group):
@@ -79,6 +89,7 @@ def split(node, max_depth, min_size, depth,F):
 
 # Build a decision tree
 def build_tree(train, max_depth, min_size,F):
+	print("START TREE")
 	root = get_split(train,F)
 	split(root, max_depth, min_size, 1,F)
 	return root
