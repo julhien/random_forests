@@ -72,7 +72,7 @@ def forest_grow(df):
     return [adaboost_error, error_selection, error_single, generalisation_error_one_tree]
 
 
-for data_file in ["datasets/glass.txt","datasets/german.txt","datasets/breast_cancer.txt",
+for data_file in ["datasets/glass.txt","datasets/german.txt",
                  "datasets/image.txt","datasets/ionosphere.txt",
                   "datasets/pima-indians-diabetes.txt","datasets/sonar.txt","datasets/vehicule.txt",
                   "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt"]:
