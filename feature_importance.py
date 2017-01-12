@@ -1,3 +1,7 @@
+"""
+@author: Julien
+"""
+
 import decision_tree
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
@@ -10,8 +14,8 @@ from Forest_RI_2 import *
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 ITER_NUMBER = 1
-FOREST_SIZE = 10
-SK_LEARN = True
+FOREST_SIZE = 100
+SK_LEARN = False
 F = [1]
 
 test_set_error = [[], []]

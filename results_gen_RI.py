@@ -16,16 +16,17 @@ from Forest_RI_2 import *
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-SK_LEARN = True
-FOREST_SIZE = 40
-NUMBER_ITER = 2
+SK_LEARN = False
+FOREST_SIZE = 100
+L = 3
+NUMBER_ITER = 1
 
 
 # file = open("result\\results_Forest_RI.txt", "w")
 # for data_file in glob.glob("datasets/*.txt"):
 
 file = open("result\\results_Forest_RI_ionosphere.txt", "w")
-for data_file in ["datasets/ionosphere.txt"]:
+for data_file in ["datasets/sonar.txt"]:
     print data_file
     f = open(data_file, "r")
 
@@ -44,7 +45,8 @@ for data_file in ["datasets/ionosphere.txt"]:
 
     df = pandas.DataFrame(X)
     # Number of feature selected at each node
-    F = [1, int(np.log(len(df.T) - 1) / np.log(2) - 1)]
+    F=[1]
+    #F = [1, int(np.log(len(df.T) - 1) / np.log(2) - 1)]
     test_set_error = [[],[]]  # test-set error for forests grown all Fs
     error_selection_tab = []  # test-set error for forest selected as best test-error performance
     generalisation_error_selection = []  # error of out-of-bag estimate for forest selected as best test-error performance
@@ -58,12 +60,13 @@ for data_file in ["datasets/ionosphere.txt"]:
         # Randomly sample 90% of the dataframe
         df_train = df.sample(frac=0.9)
         df_test = df.loc[~df.index.isin(df_train.index)]
-
+        ##Normalize for RC
+        df_train, mean, std = normalize_train(df_train)
         Y_t = df_train.drop(df_train.columns[:len(df.T) - 1], axis=1)
         X_t = df_train.drop(df_train.columns[len(df.T) - 1], axis=1)
         Y_test = df_test.drop(df_test.columns[:len(df.T) - 1], axis=1)
         X_test = df_test.drop(df_test.columns[len(df.T) - 1], axis=1)
-
+        X_test = normalize_test(X_test, mean, std)
         # Adaboost with 50 trees
         adaboost = AdaBoostClassifier()
         adaboost = adaboost.fit(X_t, Y_t)
@@ -72,36 +75,8 @@ for data_file in ["datasets/ionosphere.txt"]:
         f_forests = []
 
         for f in range(len(F)):
-            forest = Forest_RI(FOREST_SIZE, SK_LEARN, F[f])
+            forest = Forest(FOREST_SIZE, SK_LEARN, F[f], L)
             forest.train(df_train)
-            # forest = []
-            # # we keep track of the index of the data used for each tree
-            # forest_indexes = []
-            # oob_error = 0
-            # # For each tree of the forest
-            # for arbre in range(FOREST_SIZE):
-            #     # bagging
-            #     df_train_bagged = df_train.sample(frac=1., replace=True)
-            #     forest_indexes.append(df_train_bagged.index)
-            #     if SK_LEARN:
-            #         ##Construct a forest thanks to sklearn
-            #         Y_train = df_train_bagged.drop(df_train_bagged.columns[:len(df.T) - 1], axis=1)
-            #         X_train = df_train_bagged.drop(df_train_bagged.columns[len(df.T) - 1], axis=1)
-            #         clf = tree.DecisionTreeClassifier(max_features=F[f])
-            #         forest.append(clf.fit(X_train, Y_train))
-            #
-            #     # construct a forest with decision tree
-            #     else:
-            #         forest.append(decision_tree_bis.build_tree(df_train_bagged.values.tolist(), 150, 5, F[f]))
-
-                # # out_of_bag estimate
-                # total = 0.
-                # vote = 0.
-                # for x in range(len(X_t)):
-                #     if not X_t.index[x] in forest_indexes[-1]:
-                #         total = total + 1.
-                #         vote = vote + int(decision_tree_bis.predict(forest[-1], X_t.iloc[x]) != Y_t.iloc[x])
-                # oob_error = oob_error + vote / total
 
             f_forests.append(forest)
             # ... now we are supposed to have a beautiful forest
