@@ -18,6 +18,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class Forest:
+    ##sk_learn determines if we use sk_learn
+    ##with L=1 default , RI used, else RC
     def __init__(self, forest_size, sk_learn, F , L=1):
         self.trees = []
         self.forest_indices = []
@@ -26,7 +28,10 @@ class Forest:
         self.F = F
         self.L = L
     def train(self, df_train):
+        i = 0
         for arbre in range(self.forest_size):
+            i+=1
+            print(i)
             # bagging
             df_train_bagged = df_train.sample(frac=1., replace=True)
             self.forest_indices.append(df_train_bagged.index)
