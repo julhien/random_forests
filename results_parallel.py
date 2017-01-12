@@ -72,7 +72,10 @@ def forest_grow(df):
     return [adaboost_error, error_selection, error_single, generalisation_error_one_tree]
 
 
-for data_file in glob.glob("datasets/*.txt"):
+for data_file in ["datasets/glass.txt","datasets/german.txt","datasets/breast_cancer.txt",
+                 "datasets/image.txt","datasets/ionosphere.txt",
+                  "datasets/pima-indians-diabetes.txt","datasets/sonar.txt","datasets/vehicule.txt",
+                  "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt"]:
     file = open("result/results_RC/results_Forest_RC_par_"+data_file[9:], "w")
 # file = open("result\\results_Forest_RI_ionosphere.txt", "w")
 # for data_file in ["datasets/sonar.txt"]:
@@ -85,14 +88,20 @@ for data_file in glob.glob("datasets/*.txt"):
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             X.append(row)
-    to_swap = ['datasets/votes.txt', 'datasets/image.txt', 'datasets/soybean.txt']
+    to_swap = ['datasets/votes.txt', 'datasets/image.txt']
+
     if data_file in to_swap:
         X = swap_first_last(X)
     X = convert_to_float(X)
 
+
     file.write(data_file[9:-4] + '\n')
 
     df = pandas.DataFrame(X)
+    if data_file in ["datasets/glass.txt","datasets/ecoli.txt"]:
+        df = df.drop(df.columns[0], axis=1)
+    if data_file in ["datasets/vowel.txt"]:
+        df = df.drop(df.columns[:3], axis=1)
     # Number of feature selected at each node
     F=[2, 8]
     #F = [1, int(np.log(len(df.T) - 1) / np.log(2) - 1)]
