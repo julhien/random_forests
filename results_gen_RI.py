@@ -5,7 +5,6 @@ Created on Tue Jan 03 17:44:13 2017
 @author: Mathilde
 """
 import decision_tree_bis
-from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import csv
 import numpy as np
