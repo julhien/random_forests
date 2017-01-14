@@ -17,12 +17,12 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 SK_LEARN = False
 FOREST_SIZE = 100
-L = 3
-NUMBER_ITER = 30
+L = 1
+NUMBER_ITER = 1
 
 
 def forest_grow(df):
-    F = [2, 8]
+    F = [1, int(np.log(len(df.T) - 1) / np.log(2) - 1)]
     out_of_bag = []
     test_set_error = []
     # Randomly sample 90% of the dataframe
@@ -71,12 +71,11 @@ def forest_grow(df):
 
     return [adaboost_error, error_selection, error_single, generalisation_error_one_tree]
 
-
-for data_file in ["datasets/glass.txt","datasets/german.txt",
-                 "datasets/image.txt","datasets/ionosphere.txt",
-                  "datasets/pima-indians-diabetes.txt","datasets/sonar.txt","datasets/vehicule.txt",
-                  "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt"]:
-    file = open("result/results_RC/results_Forest_RC_par_"+data_file[9:], "w")
+for data_file in ["datasets/votes.txt", "datasets/vehicle.txt", "datasets/ecoli.txt"]:
+# for data_file in [
+#                  "datasets/image.txt","datasets/pima-indians-diabetes.txt","datasets/ionosphere.txt","datasets/sonar.txt","datasets/vehicle.txt",
+#                   "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt","datasets/glass.txt", "datasets/german.txt"]:
+    file = open("result/results_test/results_Forest_RC_par_"+data_file[9:], "w")
 # file = open("result\\results_Forest_RI_ionosphere.txt", "w")
 # for data_file in ["datasets/sonar.txt"]:
     print data_file
@@ -100,16 +99,14 @@ for data_file in ["datasets/glass.txt","datasets/german.txt",
     df = pandas.DataFrame(X)
     if data_file in ["datasets/glass.txt","datasets/ecoli.txt"]:
         df = df.drop(df.columns[0], axis=1)
+        print(df)
     if data_file in ["datasets/vowel.txt"]:
         df = df.drop(df.columns[:3], axis=1)
     # Number of feature selected at each node
-    F=[2, 8]
     #F = [1, int(np.log(len(df.T) - 1) / np.log(2) - 1)]
-
+    print(df)
+    # forest_grow(df)
     pool = Pool(processes=6)
-
-    print([1 for i in range(NUMBER_ITER)])
-
     y_parallel = pool.map(forest_grow, [df for i in range(NUMBER_ITER)])
     pool.close()
     pool.join()

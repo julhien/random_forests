@@ -20,7 +20,8 @@ def gini_score(groups, classes):
 
 class Node:
     def __init__(self):
-        self.feature= None
+        self.features= None
+        self.weights = None
         self.value = None
         self.classes = []
         self.gini = 1000
@@ -30,27 +31,37 @@ class Node:
         self.right = None
 
 
-    def split_at(self, index, value, dataset):
-        left = [row for row in dataset if row[index] < value]
-        right = [row for row in dataset if row[index] >= value]
+    def split_at(self, indices, weights, value, dataset):
+        left = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))])  < value]
+        right = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) >= value]
 
         return left, right
 
 
-    def find_split(self, dataset, F):
+    def find_split(self, dataset, F, L):
         self.classes = list(set(row[-1] for row in dataset))
         l_candidate = None
         r_candidate = None
         nb_features = len(dataset[0]) - 1
-        candidates = random.sample(range(nb_features), F)
-        for feature in candidates:
-            for row in dataset:
-                left, right = self.split_at(feature, row[feature], dataset)
+        weights = np.random.rand(L, F) * 2 - 1
+        candidates = []
+        for f in range(F):
+            candidates.append(random.sample(range(nb_features), L))
+        candidates = np.array(candidates).T
+        limits = np.zeros((2, F))
+        for f in range(F):
+            for l in range(L):
+                a = np.array(dataset)[:, candidates[l, f]].astype(float) * weights[l, f]
+                limits[0, f] += np.min(a)
+                limits[1, f] += np.max(a)
+        for f in range(F):
+            for value in np.linspace(limits[0, f], limits[1, f], 50):
+                left, right = self.split_at(candidates[:, f], weights[:, f], value, dataset)
                 gini = gini_score([left, right], self.classes)
                 if gini < self.gini:
                     l_candidate = left
                     r_candidate = right
-                    self.feature, self.value, self.gini = feature, row[feature], gini
+                    self.features, self.weights, self.value, self.gini = candidates[:, f], weights[:, f], value, gini
 
         return l_candidate, r_candidate
 
@@ -62,9 +73,10 @@ class Node:
 
 
 
-    def split(self, left, right, max_depth, min_size, depth, F):
+    def split(self, left, right, max_depth, min_size, depth, F, L):
         self.left = Node()
         self.right = Node()
+
         if not left and not right:
             return
 
@@ -85,9 +97,10 @@ class Node:
                 if len(right) <= min_size:
                     self.right.leaf(right)
                 else:
-                    l_candidate, r_candidate = self.right.find_split(right, F)
-                    if self.gini - gini_score([l_candidate, r_candidate], self.classes)>0.001:
-                        self.right.split(l_candidate, r_candidate, max_depth, min_size, depth+1, F)
+                    l_candidate, r_candidate = self.right.find_split(right, F, L)
+                    if self.gini - self.right.gini>0.001:
+                    # if True:
+                        self.right.split(l_candidate, r_candidate, max_depth, min_size, depth+1, F, L)
                     else:
                         self.right.leaf(right)
                 self.left.leaf(right)
@@ -95,9 +108,10 @@ class Node:
                 if len(left) <= min_size:
                     self.left.leaf(left)
                 else:
-                    l_candidate, r_candidate = self.left.find_split(left, F)
-                    if self.gini - gini_score([l_candidate, r_candidate], self.classes)>0.001:
-                        self.left.split(l_candidate, r_candidate, max_depth, min_size, depth+1, F)
+                    l_candidate, r_candidate = self.left.find_split(left, F, L)
+                    if self.gini - self.left.gini>0.001:
+                    # if True:
+                        self.left.split(l_candidate, r_candidate, max_depth, min_size, depth+1, F, L)
                     else:
                         self.left.leaf(left)
                 self.right.leaf(left)
@@ -105,25 +119,25 @@ class Node:
             if len(left) <= min_size:
                 self.left.leaf(left)
             else:
-                l_candidate, r_candidate = self.left.find_split(left, F)
-                self.left.split(l_candidate, r_candidate, max_depth, min_size, depth + 1, F)
+                l_candidate, r_candidate = self.left.find_split(left, F, L)
+                self.left.split(l_candidate, r_candidate, max_depth, min_size, depth + 1, F, L)
 
             if len(right) <= min_size:
                 self.right.leaf(right)
             else:
-                l_candidate, r_candidate = self.right.find_split(right, F)
-                self.right.split(l_candidate, r_candidate, max_depth, min_size, depth + 1, F)
+                l_candidate, r_candidate = self.right.find_split(right, F, L)
+                self.right.split(l_candidate, r_candidate, max_depth, min_size, depth + 1, F, L)
 
-    def train(self, dataset, max_depth, min_size, F):
-        left, right = self.find_split(dataset, F)
-        self.split(left, right, max_depth, min_size, 1, F)
+    def train(self, dataset, max_depth, min_size, F, L):
+        left, right = self.find_split(dataset, F, L)
+        self.split(left, right, max_depth, min_size, 1, F, L)
 
 
     def predict(self, x):
         if self.terminal:
             return self.pred
         else:
-            if x[self.feature] < self.value:
+            if sum([self.weights[i]*x[self.features[i]] for i in range(len(self.features))]) < self.value:
                 return self.left.predict(x)
 
             else:
