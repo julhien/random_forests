@@ -4,8 +4,7 @@ Created on Tue Jan 03 17:44:13 2017
 
 @author: Mathilde
 """
-import decision_tree_bis
-import decision_tree_RC
+
 import decTree_RC
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
@@ -53,10 +52,6 @@ class Forest:
                     tree.train(df_train_bagged.values.tolist(), 150 , 5, self.F)
                     self.trees.append(tree)
                 else:
-
-                    self.trees.append(decision_tree_RC.build_tree(df_train_bagged.values.tolist(), 150, 5, self.F, self.L))
- 
-
                     tree = decTree_RC.Node()
                     tree.train(df_train_bagged.values.tolist(), 150, 5, self.F, self.L)
                     self.trees.append(tree)
