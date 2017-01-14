@@ -31,7 +31,7 @@ class Forest:
         i = 0
         for arbre in range(self.forest_size):
             i+=1
-            print(i)
+            #print(i)
             # bagging
             df_train_bagged = df_train.sample(frac=1., replace=True)
             self.forest_indices.append(df_train_bagged.index)
@@ -48,6 +48,7 @@ class Forest:
                     self.trees.append(decision_tree_bis.build_tree(df_train_bagged.values.tolist(), 150, 5, self.F))
                 else:
                     self.trees.append(decision_tree_RC.build_tree(df_train_bagged.values.tolist(), 150, 5, self.F, self.L))
+ 
 ##Normalize set except last column - returns mean and std: meant for training set with all columns given
 def normalize_train(df):
     i = 0
@@ -121,6 +122,83 @@ def out_of_bag_error(X_t,Y_t,forest):
             error = error + 1.
 
     return error/len(X_t)
+
+def out_of_bag_str(X_t,Y_t,forest):
+    estimate = 0.
+    est_square=0.
+    for x in range(X_t.shape[0]):
+        Q=[]
+        Qx=0
+        for j in list(set(row[-1] for row in Y_t.values.tolist())):
+            vote = 0.
+            total = 0.
+            for arbre in range(forest.forest_size):
+                #test if we consider this tree - is the data x used to construct the tree arbre
+                if not X_t.index[x] in forest.forest_indices[arbre]:
+                    total = total + 1.
+                    
+                    if forest.sk_learn:
+                        vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==j)
+                    else:
+                        if forest.L == 1:
+                            vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==j)
+                        else:
+                            vote = vote + (decision_tree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == j)
+            if (j==Y_t.iloc[x].as_matrix()):
+                Qx = vote/total
+            else:
+                Q.append(vote/total)
+        estimate += Qx - np.max(Q)
+        est_square+= (Qx - np.max(Q))**2
+        strength = estimate/X_t.shape[0]
+        var = est_square/X_t.shape[0] - strength**2
+        sd = 0.
+        for arbre in range(forest.forest_size):
+            Q = []
+            vote = 0.
+            total = 0.
+            for j in list(set(row[-1] for row in Y_t.values.tolist())):
+                for x in range(X_t.shape[0]):
+                    if not X_t.index[x] in forest.forest_indices[arbre]:
+                        total += total
+                        if forest.sk_learn:
+                            vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==j)
+                        else:
+                            if forest.L == 1:
+                                vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==j)
+                            else:
+                                vote = vote + (decision_tree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == j)
+                Q.append(vote/total)
+            j_index=np.argmax(Q)
+            J = list(set(row[-1] for row in Y_t.values.tolist()))[j_index]
+            
+            
+            vote = 0.
+            votep2 = 0.
+            total = 0.
+            
+            for x in range(X_t.shape[0]):
+                if not X_t.index[x] in forest.forest_indices[arbre]:
+                    #x is not is te bagged training set
+                    total += total
+                    y = Y_t.iloc[x].as_matrix()
+                    if forest.sk_learn:
+                        vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==y)
+                        votep2 += (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==J)
+                    else:
+                        if forest.L == 1:
+                            vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==y)
+                            votep2 = votep2 + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==J)
+                        else:
+                            vote = vote + (decision_tree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == y) 
+                            votep2 = votep2 + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==J)
+            p1 = vote/total
+            p2 = votep2/total
+            sd += np.sqrt(p1 + p2 + (p1-p2)**2)
+        sd = sd/forest.forest_size
+    return strength, var/(sd)**2
+    
+
 
 def permuted_oob_error(X_t,Y_t, forest):
     errors = [0]*X_t.shape[1]
