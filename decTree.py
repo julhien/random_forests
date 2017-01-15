@@ -42,16 +42,21 @@ class Node:
         l_candidate = None
         r_candidate = None
         nb_features = len(dataset[0]) - 1
-        candidates = random.sample(range(nb_features), F)
-        for feature in candidates:
-            for row in dataset:
-                left, right = self.split_at(feature, row[feature], dataset)
-                gini = gini_score([left, right], self.classes)
-                if gini < self.gini:
-                    l_candidate = left
-                    r_candidate = right
-                    self.feature, self.value, self.gini = feature, row[feature], gini
+        indices = range(nb_features)
+        empty = True
+        while empty and indices:
+            candidates = random.sample(indices, F)
 
+            for feature in candidates:
+                indices.remove(feature)
+                for row in dataset:
+                    left, right = self.split_at(feature, row[feature], dataset)
+                    gini = gini_score([left, right], self.classes)
+                    if gini < self.gini:
+                        l_candidate = left
+                        r_candidate = right
+                        self.feature, self.value, self.gini = feature, row[feature], gini
+            empty = (len(l_candidate)==0 or len(r_candidate)==0)
         return l_candidate, r_candidate
 
 

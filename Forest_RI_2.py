@@ -47,9 +47,8 @@ class Forest:
             # construct a forest with decision tree
             else:
                 if self.L==1:
-                    tree = decTree.Node()
-
-                    tree.train(df_train_bagged.values.tolist(), 150 , 5, self.F)
+                    tree = decTree_RC.Node()
+                    tree.train(df_train_bagged.values.tolist(), 150 , 5, self.F, self.L)
                     self.trees.append(tree)
                 else:
                     tree = decTree_RC.Node()

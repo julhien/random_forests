@@ -32,7 +32,7 @@ class Node:
 
 
     def split_at(self, indices, weights, value, dataset):
-        left = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))])  < value]
+        left = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) < value]
         right = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) >= value]
 
         return left, right
