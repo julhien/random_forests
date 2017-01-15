@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 SK_LEARN = False
 FOREST_SIZE = 100
-NUMBER_ITER = 30
+NUMBER_ITER = 24
 
 def swap_classes(df):
     indices_swap = np.random.choice(range(len(df.index)),size = len(df.index)/20 , replace=False)
@@ -63,19 +63,21 @@ def forest_grow(df):
         # we compute the test set error on the forest
         test_set_error_RC.append(function_test_set_error(X_test, Y_test, forest_RC))
 
-        forest_RI = Forest(FOREST_SIZE, SK_LEARN, F[1], L[1])
-        forest_RI.train(df_train)
+        forest_ri = Forest(FOREST_SIZE, SK_LEARN, F[1], L[1])
+        forest_ri.train(df_train)
 
         # we compute the test set error on the forest
-        test_set_error_RI.append(function_test_set_error(X_test, Y_test, forest_RI))
+        test_set_error_RI.append(function_test_set_error(X_test, Y_test, forest_ri))
 
-    diff_Adaboost = test_set_error_Adaboost[1]-test_set_error_Adaboost[0]
-    diff_RC = test_set_error_RC[1]-test_set_error_RC[0]
-    diff_RI = test_set_error_RI[1]-test_set_error_RI[0]
+    diff_Adaboost = (test_set_error_Adaboost[1]-test_set_error_Adaboost[0])*100
+    diff_RC = (test_set_error_RC[1]-test_set_error_RC[0])*100
+    diff_RI = (test_set_error_RI[1]-test_set_error_RI[0])*100
 
-    return [diff_Adaboost,diff_RC,diff_RI]
+    return [test_set_error_RC[0], test_set_error_RC[1],
+            test_set_error_RI[0], test_set_error_RI[1],
+            test_set_error_Adaboost[0], test_set_error_Adaboost[1]]
 
-for data_file in ["datasets/liver.txt", "datasets/ionosphere.txt","datasets/sonar.txt", "datasets/pima-indians-diabetes.txt", "datasets/votes.txt", "datasets/vehicle.txt"]:
+for data_file in ["datasets/ionosphere.txt","datasets/sonar.txt", "datasets/pima-indians-diabetes.txt", "datasets/votes.txt","datasets/liver.txt", "datasets/vehicle.txt"]:
 # for data_file in [
 #                  "datasets/image.txt","datasets/pima-indians-diabetes.txt","datasets/ionosphere.txt","datasets/sonar.txt","datasets/vehicle.txt",
 #                   "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt","datasets/glass.txt", "datasets/german.txt"]:
@@ -109,7 +111,7 @@ for data_file in ["datasets/liver.txt", "datasets/ionosphere.txt","datasets/sona
     #
     #
     # print(df)
-    pool = Pool(processes=1)
+    pool = Pool(processes=6)
     # forest_grow(df)
     y_parallel = pool.map(forest_grow, [df for i in range(NUMBER_ITER)])
     pool.close()
@@ -120,12 +122,18 @@ for data_file in ["datasets/liver.txt", "datasets/ionosphere.txt","datasets/sona
     diff_adaboost = np.mean(y_parallel[:,0])
     diff_RC = np.mean(y_parallel[:,1])
     diff_RI = np.mean(y_parallel[:,2])
+    test_set_error_RC_no = np.mean(y_parallel[:,0])
+    test_set_error_RC_yes = np.mean(y_parallel[:,1])
+    test_set_error_RI_no = np.mean(y_parallel[:,2])
+    test_set_error_RI_yes = np.mean(y_parallel[:,3])
+    test_set_error_Adaboost_no = np.mean(y_parallel[:,4])
+    test_set_error_Adaboost_yes = np.mean(y_parallel[:,5])
 
     file.write(
-        'Adaboost = ' + str(diff_adaboost) + '\n' + 'RI = ' + str(diff_RI) + '\n' + 'RC = ' + str(
-            diff_RC)+'\n\n')
-    print(
-        'Adaboost = ' + str(diff_adaboost) + '\n' + 'RI = ' + str(diff_RI) + '\n' + 'RC = ' + str(
-            diff_RC)+'\n\n')
+        'Adaboost = ' + str(test_set_error_Adaboost_no)+ ","+str(test_set_error_Adaboost_yes) + '\n' + 'RI = ' + str(test_set_error_RI_no)+","+ str(test_set_error_RI_yes)+ '\n' + 'RC = ' + str(
+            test_set_error_RC_no)+","+str(test_set_error_RC_yes)+'\n\n')
 
+    print(
+        'Adaboost = ' + str(test_set_error_Adaboost_no)+ ","+str(test_set_error_Adaboost_yes) + '\n' + 'RI = ' + str(test_set_error_RI_no)+","+ str(test_set_error_RI_yes)+ '\n' + 'RC = ' + str(
+            test_set_error_RC_no)+","+str(test_set_error_RC_yes)+'\n\n')
     file.close()
