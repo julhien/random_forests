@@ -1,0 +1,6 @@
+breast_cancer
+Adaboost = 0.438095238095
+Selection = 0.619047619048
+Single = 0.642857142857
+One Tree = 0.621482541786
+
