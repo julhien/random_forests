@@ -17,14 +17,13 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 SK_LEARN = False
 FOREST_SIZE = 100
-L = 3
+L = 1
 NUMBER_ITER = 6
 
 
 def forest_grow(df):
     #F = [1,8]
-    F = [2]
-    # , int(np.log(len(df.T) - 1) / np.log(2) + 1)]
+    F = [1, int(np.log(len(df.T) - 1) / np.log(2) + 1)]
     out_of_bag = []
     test_set_error = []
     # Randomly sample 90% of the dataframe
@@ -72,12 +71,13 @@ def forest_grow(df):
 
     return [adaboost_error, error_selection, error_single, generalisation_error_one_tree]
 
-for data_file in ["datasets/liver.txt"]:
+for data_file in ["datasets/pima-indians-diabetes.txt"]:
+    #,"datasets/ionosphere.txt","datasets/sonar.txt", "datasets/votes.txt", "datasets/liver.txt"]:
     # , "datasets/vehicle.txt", "datasets/ecoli.txt"]:
 # for data_file in [
 #                  "datasets/image.txt","datasets/pima-indians-diabetes.txt","datasets/ionosphere.txt","datasets/sonar.txt","datasets/vehicle.txt",
 #                   "datasets/votes.txt","datasets/vowel.txt", "datasets/ecoli.txt","datasets/glass.txt", "datasets/german.txt"]:
-    file = open("result/results_test/results_Forest_RI_par_"+data_file[9:], "w")
+    file = open("result/results_test/results_Forest_RI_bis_"+data_file[9:], "w")
 # file = open("result\\results_Forest_RI_ionosphere.txt", "w")
 # for data_file in ["datasets/sonar.txt"]:
     print data_file

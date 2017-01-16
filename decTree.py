@@ -21,7 +21,7 @@ def gini_score(groups, classes):
 class Node:
     def __init__(self):
         self.feature= None
-        self.value = None
+        self.threshold = None
         self.classes = []
         self.gini = 1000
         self.terminal = False
@@ -30,18 +30,18 @@ class Node:
         self.right = None
 
 
-    def split_at(self, index, value, dataset):
-        left = [row for row in dataset if row[index] < value]
-        right = [row for row in dataset if row[index] >= value]
+    def split_at(self, index, threshold, data):
+        left = [row for row in data if row[index] < threshold]
+        right = [row for row in data if row[index] >= threshold]
 
         return left, right
 
 
-    def find_split(self, dataset, F):
-        self.classes = list(set(row[-1] for row in dataset))
+    def find_split(self, data, F):
+        self.classes = list(set(row[-1] for row in data))
         l_candidate = None
         r_candidate = None
-        nb_features = len(dataset[0]) - 1
+        nb_features = len(data[0]) - 1
         indices = range(nb_features)
         empty = True
         while empty and indices:
@@ -49,14 +49,15 @@ class Node:
 
             for feature in candidates:
                 indices.remove(feature)
-                for row in dataset:
-                    left, right = self.split_at(feature, row[feature], dataset)
+                for row in data:
+                    left, right = self.split_at(feature, row[feature], data)
                     gini = gini_score([left, right], self.classes)
                     if gini < self.gini:
                         l_candidate = left
                         r_candidate = right
-                        self.feature, self.value, self.gini = feature, row[feature], gini
-            empty = (len(l_candidate)==0 or len(r_candidate)==0)
+                        self.feature, self.threshold, self.gini = feature, row[feature], gini
+            # empty = (len(l_candidate)==0 or len(r_candidate)==0)
+            empty = False
         return l_candidate, r_candidate
 
 
@@ -128,7 +129,7 @@ class Node:
         if self.terminal:
             return self.pred
         else:
-            if x[self.feature] < self.value:
+            if x[self.feature] < self.threshold:
                 return self.left.predict(x)
 
             else:

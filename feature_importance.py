@@ -49,7 +49,7 @@ for iter in range(ITER_NUMBER):
     f_forests = []
 
     for f in range(len(F)):
-        forest = Forest_RI(FOREST_SIZE, SK_LEARN, F[f])
+        forest = Forest(FOREST_SIZE, SK_LEARN, F[f])
         forest.train(df_train)
 
         f_forests.append(forest)

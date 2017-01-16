@@ -2,7 +2,7 @@
 """
 Created on Sat Jan 07 15:31:34 2017
 
-@author: Mathilde
+@author: Julien
 """
 
 from random import seed
@@ -22,7 +22,7 @@ class Node:
     def __init__(self):
         self.features= None
         self.weights = None
-        self.value = None
+        self.threshold = None
         self.classes = []
         self.gini = 1000
         self.terminal = False
@@ -31,18 +31,18 @@ class Node:
         self.right = None
 
 
-    def split_at(self, indices, weights, value, dataset):
-        left = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) < value]
-        right = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) >= value]
+    def split_at(self, indices, weights, threshold, dataset):
+        left = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) < threshold]
+        right = [row for row in dataset if sum([weights[i]*row[indices[i]] for i in range(len(indices))]) >= threshold]
 
         return left, right
 
 
-    def find_split(self, dataset, F, L):
-        self.classes = list(set(row[-1] for row in dataset))
+    def find_split(self, data, F, L):
+        self.classes = list(set(row[-1] for row in data))
         l_candidate = None
         r_candidate = None
-        nb_features = len(dataset[0]) - 1
+        nb_features = len(data[0]) - 1
         weights = np.random.rand(L, F) * 2 - 1
         candidates = []
         for f in range(F):
@@ -51,17 +51,17 @@ class Node:
         limits = np.zeros((2, F))
         for f in range(F):
             for l in range(L):
-                a = np.array(dataset)[:, candidates[l, f]].astype(float) * weights[l, f]
+                a = np.array(data)[:, candidates[l, f]].astype(float) * weights[l, f]
                 limits[0, f] += np.min(a)
                 limits[1, f] += np.max(a)
         for f in range(F):
             for value in np.linspace(limits[0, f], limits[1, f], 50):
-                left, right = self.split_at(candidates[:, f], weights[:, f], value, dataset)
+                left, right = self.split_at(candidates[:, f], weights[:, f], value, data)
                 gini = gini_score([left, right], self.classes)
                 if gini < self.gini:
                     l_candidate = left
                     r_candidate = right
-                    self.features, self.weights, self.value, self.gini = candidates[:, f], weights[:, f], value, gini
+                    self.features, self.weights, self.threshold, self.gini = candidates[:, f], weights[:, f], value, gini
 
         return l_candidate, r_candidate
 
@@ -137,7 +137,7 @@ class Node:
         if self.terminal:
             return self.pred
         else:
-            if sum([self.weights[i]*x[self.features[i]] for i in range(len(self.features))]) < self.value:
+            if sum([self.weights[i]*x[self.features[i]] for i in range(len(self.features))]) < self.threshold:
                 return self.left.predict(x)
 
             else:

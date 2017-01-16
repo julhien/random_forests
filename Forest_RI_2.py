@@ -4,7 +4,6 @@ Created on Tue Jan 03 17:44:13 2017
 
 @author: Mathilde
 """
-
 import decTree_RC
 import sklearn
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
@@ -16,7 +15,7 @@ import warnings
 import decTree
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-
+##Mathilde##
 class Forest:
     ##sk_learn determines if we use sk_learn
     ##with L=1 default , RI used, else RC
@@ -46,15 +45,20 @@ class Forest:
                 self.trees.append(clf.fit(X_train, Y_train))
             # construct a forest with decision tree
             else:
-                if self.L==1:
-                    tree = decTree_RC.Node()
-                    tree.train(df_train_bagged.values.tolist(), 150 , 5, self.F, self.L)
-                    self.trees.append(tree)
-                else:
+                # if self.L==1:
+                #
+                #     self.trees.append(decision_tree_bis.build_tree(df_train_bagged.values.tolist(),100,5, self.F))
+                #     # tree = decTree_RC.Node()
+                #     # tree.train(df_train_bagged.values.tolist(), 150 , 5, self.F, self.L)
+                #     # self.trees.append(tree)
+                # else:
                     tree = decTree_RC.Node()
                     tree.train(df_train_bagged.values.tolist(), 150, 5, self.F, self.L)
                     self.trees.append(tree)
 
+
+
+##Julien##
 ##Normalize set except last column - returns mean and std: meant for training set with all columns given
 def normalize_train(df):
     i = 0
@@ -94,9 +98,10 @@ def function_test_set_error(X_test,Y_test,forest):
             if forest.sk_learn:
                 vote = vote + (forest.trees[arbre].predict(X_test.iloc[[x]].as_matrix())[0]==Y_test.iloc[[x]].as_matrix())
             else:
-                if forest.L ==1:
-                    vote = vote + (forest.trees[arbre].predict(X_test.iloc[x].as_matrix())==Y_test.iloc[x].as_matrix())
-                else:
+                # if forest.L ==1:
+                #     vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_test.iloc[x].as_matrix()) == Y_test.iloc[x].as_matrix())
+                #     # vote = vote + (forest.trees[arbre].predict(X_test.iloc[x].as_matrix())==Y_test.iloc[x].as_matrix())
+                # else:
                     vote = vote + (
                         forest.trees[arbre].predict(X_test.iloc[x].as_matrix()) == Y_test.iloc[
                         x].as_matrix())
@@ -117,9 +122,13 @@ def out_of_bag_error(X_t,Y_t,forest):
                 if forest.sk_learn:
                     vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==Y_t.iloc[[x]].as_matrix())
                 else:
-                    if forest.L == 1:
-                        vote = vote + (forest.trees[arbre].predict(X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
-                    else:
+                    # if forest.L == 1:
+                    #
+                    #     vote = vote + (
+                    #     decision_tree_bis.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == Y_t.iloc[
+                    #         x].as_matrix())
+                    #     # vote = vote + (forest.trees[arbre].predict(X_t.iloc[x].as_matrix())==Y_t.iloc[x].as_matrix())
+                    # else:
 
                         vote = vote + (
                             forest.trees[arbre].predict(X_t.iloc[x].as_matrix()) == Y_t.iloc[
@@ -148,10 +157,14 @@ def out_of_bag_str(X_t,Y_t,forest):
                     if forest.sk_learn:
                         vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==j)
                     else:
-                        if forest.L == 1:
-                            vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==j)
-                        else:
-                            vote = vote + (decision_tree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == j)
+                        # if forest.L == 1:
+                        #
+                        #     vote = vote + (
+                        #     decision_tree_bis.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == Y_t.iloc[
+                        #         x].as_matrix())
+                        #     # vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==j)
+                        # else:
+                            vote = vote + (decTree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == j)
             if (j==Y_t.iloc[x].as_matrix()):
                 Qx = vote/total
             else:
@@ -176,12 +189,12 @@ def out_of_bag_str(X_t,Y_t,forest):
                     vote = vote + (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==y)
                     votep2 += (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]==J)
                 else:
-                    if forest.L == 1:
-                        vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==y)
-                        votep2 = votep2 + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==J)
-                    else:
-                        vote = vote + (decision_tree_RC.predict(forest.trees[arbre], X_t.iloc[x].as_matrix()) == y) 
-                        votep2 = votep2 + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==J)
+                    # if forest.L == 1:
+                    #     vote = vote + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==y)
+                    #     votep2 = votep2 + (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())==J)
+                    # else:
+                        vote = vote + (forest.trees[arbre].predict(X_t.iloc[x].as_matrix()) == y)
+                        votep2 = votep2 + (forest.trees[arbre].predict(X_t.iloc[x].as_matrix())==J)
         p1 = vote/total
         p2 = votep2/total
         sd += np.sqrt(p1 + p2 + (p1-p2)**2)
@@ -210,11 +223,11 @@ def permuted_oob_error(X_t,Y_t, forest):
                         forest.trees[arbre].predict(X_t_arbre.loc[[indices_oob_arbre[i]]])[0] == Y_t.loc[
                             [indices_oob_arbre[i]]].as_matrix())[0]
                     else:
-                        if forest.L == 1:
-                            vote[indices_oob_arbre[i]] = vote[indices_oob_arbre[i]] + (
-                                forest.trees[arbre].predict( X_t_arbre.loc[indices_oob_arbre[i]].as_matrix()) == Y_t.loc[
-                            [indices_oob_arbre[i]]].as_matrix())[0]
-                        else:
+                        # if forest.L == 1:
+                        #     vote[indices_oob_arbre[i]] = vote[indices_oob_arbre[i]] + (
+                        #         forest.trees[arbre].predict( X_t_arbre.loc[indices_oob_arbre[i]].as_matrix()) == Y_t.loc[
+                        #     [indices_oob_arbre[i]]].as_matrix())[0]
+                        # else:
                             vote[indices_oob_arbre[i]] = vote[indices_oob_arbre[i]] + (
                                 forest.trees[arbre].predict(X_t_arbre.loc[indices_oob_arbre[i]].as_matrix()) == Y_t.loc[
                                     [indices_oob_arbre[i]]].as_matrix())[0]
@@ -238,9 +251,9 @@ def single_tree_error(X_t,Y_t,forest):
                 if forest.sk_learn:
                     cond = (forest.trees[arbre].predict(X_t.iloc[[x]].as_matrix())[0]!=Y_t.iloc[[x]].as_matrix())
                 else:
-                    if forest.L == 1:
-                        cond = (forest.trees[arbre].predict(X_t.iloc[x].as_matrix())!=Y_t.iloc[x].as_matrix())
-                    else:
+                    # if forest.L == 1:
+                    #     cond = (decision_tree_bis.predict(forest.trees[arbre],X_t.iloc[x].as_matrix())!=Y_t.iloc[x].as_matrix())
+                    # else:
                         cond = (forest.trees[arbre].predict(X_t.iloc[x].as_matrix()) != Y_t.iloc[
                             x].as_matrix())
                 if cond:
